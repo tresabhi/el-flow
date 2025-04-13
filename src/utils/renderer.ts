@@ -11,8 +11,8 @@ export class Renderer {
   camera = { x: 0, y: 1, zoom: 2 ** -3 };
   width = 0;
   height = 0;
-  pixelRatio = 2 ** -2;
-  dither = 1;
+  pixelRatio = 2 ** -2.5;
+  dither = 2;
 
   init() {
     this.canvas = document.getElementById("canvas") as HTMLCanvasElement;

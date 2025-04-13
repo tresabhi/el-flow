@@ -1,20 +1,21 @@
-<script>
+<script lang="ts">
   import { onMount } from "svelte";
-  import Control from "./lib/Control.svelte";
+  import { Renderer } from "./bare-bones/renderer";
   import Playground from "./lib/Playground.svelte";
-  import { Renderer } from "./utils/renderer";
+  import code from "./shaders/shader.wgsl?raw";
 
-  const renderer = new Renderer();
+  const renderer = new Renderer(code);
 
-  onMount(() => {
-    renderer.init();
-    renderer.startRenderLoop();
-    // return renderer.stopRenderLoop;
+  onMount(async () => {
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+
+    await renderer.init(canvas);
+    renderer.startFrameLoop();
   });
 </script>
 
 <div id="app">
-  <Control {renderer} />
+  <!-- <Control {renderer} /> -->
   <Playground />
 </div>
 
