@@ -1,10 +1,19 @@
 <script>
-  import List from "./lib/List.svelte";
+  import { onMount } from "svelte";
+  import Control from "./lib/Control.svelte";
   import Playground from "./lib/Playground.svelte";
+  import { Renderer } from "./utils/renderer";
+
+  const renderer = new Renderer();
+
+  onMount(() => {
+    renderer.init();
+    renderer.loop();
+  });
 </script>
 
 <div id="app">
-  <List />
+  <Control {renderer} />
   <Playground />
 </div>
 

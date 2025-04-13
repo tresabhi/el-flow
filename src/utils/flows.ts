@@ -1,4 +1,4 @@
-import { Vector2 } from "./vector2";
+import type { Vector2 } from "./math";
 
 export enum FlowType {
   Uniform,
@@ -24,6 +24,6 @@ export const flows: Flow[] = [];
 flows.push({
   type: FlowType.Uniform,
   V: 1,
-  position: new Vector2(),
+  position: { x: 0, y: 0 },
   theta: Math.PI / 4,
 });
