@@ -8,16 +8,36 @@ export class Renderer {
 
   private animationFrame?: number;
 
-  camera = { x: 0, y: 0, zoom: 2 ** -4 };
+  camera = { x: 0, y: 1, zoom: 2 ** -3 };
   width = 0;
   height = 0;
   pixelRatio = 2 ** -2;
-  dither = 2;
+  dither = 1;
 
   init() {
     this.canvas = document.getElementById("canvas") as HTMLCanvasElement;
     this.ctx = this.canvas.getContext("2d")!;
     this.updateDimensions();
+
+    const { camera, canvas, pixelRatio } = this;
+
+    function handlePointerMove(event: PointerEvent) {
+      camera.x -= event.movementX / canvas.clientWidth / camera.zoom;
+      camera.y += event.movementY / canvas.clientHeight / camera.zoom;
+    }
+    function handlePointerUp(event: PointerEvent) {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    }
+    function handleScroll(event: WheelEvent) {
+      camera.zoom /= 1 + event.deltaY / 1000;
+    }
+
+    this.canvas.addEventListener("wheel", handleScroll);
+    this.canvas.addEventListener("pointerdown", () => {
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+    });
   }
 
   updateDimensions() {
