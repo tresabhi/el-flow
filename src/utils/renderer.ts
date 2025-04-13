@@ -6,7 +6,9 @@ export class Renderer {
   image?: ImageData;
   frame = 0;
 
-  camera = { x: 0, y: 0, zoom: 2 ** -2 };
+  private animationFrame?: number;
+
+  camera = { x: 0, y: 0, zoom: 2 ** -4 };
   width = 0;
   height = 0;
   pixelRatio = 2 ** -2;
@@ -38,16 +40,17 @@ export class Renderer {
     const { data } = this.image!;
     const du = 1 / this.width;
     const dv = 1 / this.height;
+    const t = Date.now() / 1000;
 
     for (let y = 0; y < this.height; y++) {
-      const v = y / (this.height - 1);
-
       if (y % this.dither !== this.frame % this.dither) continue;
 
+      const v = y / (this.height - 1);
+
       for (let x = 0; x < this.width; x++) {
-        const u = x / (this.width - 1);
         const index = (y * this.width + x) * 4;
-        const [r, g, b, a = 1] = this.fragment({ u, v }, { u: du, v: dv });
+        const u = x / (this.width - 1);
+        const [r, g, b, a = 1] = this.fragment({ u, v }, { u: du, v: dv }, t);
 
         data[index] = 255 * r;
         data[index + 1] = 255 * g;
@@ -62,22 +65,22 @@ export class Renderer {
 
   loopLogic() {}
 
-  fragment(P: Vector2UV, dP: Vector2UV): Vector4Tuple {
+  fragment(P: Vector2UV, dP: Vector2UV, t: number): Vector4Tuple {
     const x = (P.u - 0.5) / this.camera.zoom + this.camera.x;
     const y = (0.5 - P.v) / this.camera.zoom + this.camera.y;
 
-    // const color = psi(x, y);
-    // return [-color, color, 0, 1];
+    // const color = psi(x, y, t);
+    // return [-color, 0, color, 1];
 
     const dx = dP.u / this.camera.zoom;
     const dy = dP.v / this.camera.zoom;
     const ddx = dx / 2;
     const ddy = dy / 2;
 
-    const z0 = psi(x - ddx, y - ddy);
-    const z1 = psi(x + ddx, y - ddy);
-    const z2 = psi(x + ddx, y + ddy);
-    const z3 = psi(x - ddx, y + ddy);
+    const z0 = psi(x - ddx, y - ddy, t);
+    const z1 = psi(x + ddx, y - ddy, t);
+    const z2 = psi(x + ddx, y + ddy, t);
+    const z3 = psi(x - ddx, y + ddy, t);
     const zMin = Math.min(z0, z1, z2, z3);
     const zMax = Math.max(z0, z1, z2, z3);
 
@@ -89,10 +92,16 @@ export class Renderer {
     return satisfied ? WHITE : BLACK;
   }
 
-  loop() {
+  startRenderLoop() {
     this.loopLogic();
     this.render();
-    requestAnimationFrame(this.loop.bind(this));
+    this.animationFrame = requestAnimationFrame(
+      this.startRenderLoop.bind(this)
+    );
+  }
+
+  stopRenderLoop() {
+    if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
   }
 }
 
@@ -103,34 +112,39 @@ const SCALE = 1;
 
 export const cs = { current: [] as number[] };
 
-const Lambda = 1;
-const Gamma = 1;
+const lambda = 1 / (2 * Math.PI);
+const gamma = 1 / (2 * Math.PI);
 
 // stream
-function psi(x: number, y: number) {
+function psi(x: number, y: number, t: number) {
   const R = 1.5;
-  const t = Date.now() / 10000;
   const xBar1 = R * Math.cos(t);
   const yBar1 = R * Math.sin(t);
 
-  return psiVortex(x, y) + psiVortex(x - 1 - xBar1, y - 1.5 - yBar1);
-
   return (
-    psiSource(x - 1 - xBar1, y - yBar1) -
-    psiSource(x + 1.5, y + 1) -
-    psiSource(x + 1, y - 1) +
-    psiVortex(x, y)
+    psiVortex(x, y) +
+    psiVortex(x - 1 - xBar1, y - 1.5 - yBar1) -
+    psiSource(x + 2, y)
   );
+
+  // return (
+  //   psiSource(x - 1 - xBar1, y - yBar1) -
+  //   3 * psiSource(x + 1.5, y + 1) -
+  //   2 * psiSource(x + 1, y - 1) +
+  //   psiVortex(x, y)
+  // );
+
+  // return psiSource(x - 3, y + 1) - psiSource(x + 3, y - 1) + psiVortex(x, y);
 }
 
 function psiSource(x: number, y: number) {
   const theta = Math.atan2(y, x);
-  return (Lambda * theta) / (2 * Math.PI);
+  return lambda * theta;
 }
 
 function phiSource(x: number, y: number) {
   const r = Math.sqrt(x ** 2 + y ** 2);
-  return (Lambda * Math.log(r)) / (2 * Math.PI);
+  return lambda * Math.log(r);
 }
 
 // potential
@@ -140,10 +154,10 @@ function phi(x: number, y: number) {
 
 function psiVortex(x: number, y: number) {
   const r = Math.sqrt(x ** 2 + y ** 2);
-  return (Gamma * Math.log(r)) / (2 * Math.PI);
+  return gamma * Math.log(r);
 }
 
 function phiVortex(x: number, y: number) {
   const theta = Math.atan2(y, x);
-  return (Gamma * theta) / (2 * Math.PI);
+  return gamma * theta;
 }

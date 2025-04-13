@@ -8,7 +8,8 @@
 
   onMount(() => {
     renderer.init();
-    renderer.loop();
+    renderer.startRenderLoop();
+    // return renderer.stopRenderLoop;
   });
 </script>
 

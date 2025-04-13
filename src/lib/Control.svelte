@@ -19,7 +19,7 @@
     type="range"
     min="0"
     max="4"
-    step="1"
+    step={Number.EPSILON}
     on:input={(event) => {
       renderer.pixelRatio =
         2 ** -(event.target as HTMLInputElement).valueAsNumber;
@@ -29,15 +29,7 @@
   <break></break>
 
   <span>dither</span>
-  <input
-    type="range"
-    min="1"
-    max="32"
-    step="1"
-    on:input={(event) => {
-      renderer.dither = (event.target as HTMLInputElement).valueAsNumber;
-    }}
-  />
+  <input type="range" min="1" max="32" step="1" bind:value={renderer.dither} />
   <break></break>
 
   <span>zoom</span>
@@ -46,9 +38,7 @@
     min={Number.EPSILON}
     max="1"
     step={Number.EPSILON}
-    on:input={(event) => {
-      renderer.camera.zoom = (event.target as HTMLInputElement).valueAsNumber;
-    }}
+    bind:value={renderer.camera.zoom}
   />
   <break></break>
 
